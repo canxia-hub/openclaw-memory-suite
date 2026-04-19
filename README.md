@@ -133,6 +133,8 @@ See [README_AGENT.md](./README_AGENT.md) for Agent installation guide.
 
 ### Basic Usage
 
+**📖 详细安装指南**: 请查阅 [INSTALLATION-GUIDE.md](./docs/INSTALLATION-GUIDE.md) 获取完整的安装步骤、配置规范和故障排查指南。
+
 ```bash
 # 1. Install the suite
 git clone https://github.com/canxia-hub/openclaw-memory-suite.git
