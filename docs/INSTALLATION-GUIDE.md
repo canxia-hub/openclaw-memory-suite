@@ -27,7 +27,7 @@ OpenClaw Memory Suite 是一套完整的 AI Agent 长期记忆解决方案，包
 
 | 组件 | 类型 | 版本 | 优先级 | 说明 |
 |------|------|------|--------|------|
-| **memory-lancedb-pro** | Plugin | v1.3.0 | Critical | LanceDB 增强型记忆插件（核心） |
+| **memory-lancedb-pro** | Plugin | v1.3.1 | Critical | LanceDB 增强型记忆插件（核心） |
 | **lancedb-pro-skill** | Skill | v1.0.0 | High | 记忆系统部署与维护技能 |
 | **graphify-openclaw** | Skill | v1.0.0 | High | Wiki 知识图谱构建技能 |
 | **self-improvement** | Skill | v1.0.0 | Medium | 自我改进与学习系统 |
@@ -120,8 +120,8 @@ Step 7: 验证安装 (openclaw doctor --non-interactive)
 # 1.1 进入 OpenClaw 插件目录
 cd ~/.openclaw/extensions
 
-# 1.2 克隆插件仓库（使用最新分支）
-git clone -b feature/v1.3.0-shared-search-dreaming-config \
+# 1.2 克隆插件仓库（使用最新版本）
+git clone -b master \
   https://github.com/canxia-hub/memory-lancedb-pro.git
 
 # 1.3 进入插件目录
@@ -1007,7 +1007,7 @@ openclaw gateway restart
 ```bash
 # 安装
 cd ~/.openclaw/extensions
-git clone -b feature/v1.3.0-shared-search-dreaming-config \
+git clone -b master \
   https://github.com/canxia-hub/memory-lancedb-pro.git
 cd memory-lancedb-pro && npm install
 

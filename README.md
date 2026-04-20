@@ -67,7 +67,7 @@ OpenClaw Memory Suite 是一套完整的 AI Agent 长期记忆解决方案，包
 - Memory-Wiki Bridge 实时同步
 - 多作用域隔离（Agent/Project/User）
 
-**Version**: v1.3.0
+**Version**: v1.3.1
 
 ---
 
