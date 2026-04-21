@@ -1,109 +1,131 @@
-# ⏰ 记忆系统定时任务配置清单
+# ⏰ Memory Suite Cron & Dreaming Contract
 
-> **版本**: 4.1.0  
-> **创建时间**: 2026-03-23  
-> **最后更新**: 2026-04-19 22:52  
-> **核心原则**: 不引入第二套系统；所有定时任务都必须围绕"主账本 + Working Memory + LanceDB 桥接增强"闭环运行
+> **Version**: 5.0.0  
+> **Updated**: 2026-04-22
 
----
-
-## 📋 定时任务总览
-
-| 任务名称 | 执行时间 | 频率 | 来源 | 核心职责 |
-|---------|---------|------|------|----------|
-| Dreaming Light Output | 会话结束时 | 事件驱动 | 插件运行时 | 写入会话摘要到 light phase |
-| Dreaming REM Output | 反思生成时 | 事件驱动 | 插件运行时 | 写入反思结果到 rem phase |
-| Dreaming Deep Output | promotion 发生时 | 事件驱动 | 插件运行时 | 写入 durable promotion 到 deep phase |
-| Memory Dreaming Promotion | 03:00 | 每日 | memory-core cron | 触发短期记忆晋升，间接喂给 deep phase |
-| Daily Digest | Gateway 启动时 | 触发式 | 插件代码 | 从 phase 生成 complete/highlights |
-| 记忆系统每日健康检查 | 03:00 | 每日 | 宿主级 cron | 健康检查 + Dreaming 链路验证（归档整理已移交 dreaming daily digest） |
-| 记忆系统每周归档 | 周一 03:30 | 每周 | 宿主级 | 周归档、候选层巡检 |
-| 记忆系统每月维护 | 每月 1 日 03:00 | 每月 | 宿主级 | LanceDB 去重、系统漂移检查 |
-| Self-Growth Daily Diary | 03:00 | 每日 | cron 任务 | 自我成长日记 |
-| Self-Evolution Daily | 03:00 | 每日 | cron 任务 | 自我进化分析 |
+本文档记录的是 **当前推荐口径**，用于说明 memory suite 在最新版 `memory-lancedb-pro v1.3.2` 下的 Dreaming 调度方式。
 
 ---
 
-## 🌙 Dreaming 配置（插件级）
+## 1. 当前真实模型
 
-### 当前真实实现
+当前 Dreaming 不是旧的“单一 promotion 任务 + UI 投影三相位”。
 
-#### Light Phase
-- **触发**: 会话摘要落盘时（事件驱动）
-- **来源**: `session-memory` / 会话摘要写入链路
-- **输出**: `memory/dreaming/light/YYYY-MM-DD.md`
-- **注意**: 不是独立 cron；`openclaw.plugin.json` 中的 `phases.light.cron` 目前仅是 schema 能力，尚未真正调度
+当前模型是：
 
-#### Deep Phase
-- **触发**: `memory_promote` 或 memory-core 的短期晋升任务触发 promotion 时
-- **来源**: `tools.ts` → `memory_promote` → `dreamingInterop.recordDeepPromotion()`
-- **输出**: `memory/dreaming/deep/YYYY-MM-DD.md`
-- **条件**: 仅 `state=confirmed` 且 `layer=durable` 的 promotion 才进入
-- **补充**: 当前每日 03:00 的真实调度来自 `Memory Dreaming Promotion` cron，而不是插件自行注册 deep phase cron
+- **Light**: 独立 managed cron
+- **Deep / Promotion**: 独立 managed cron
+- **REM**: 独立 managed cron
 
-#### REM Phase
-- **触发**: reflection 文件生成时（事件驱动）
-- **来源**: reflection 写回链路
-- **输出**: `memory/dreaming/rem/YYYY-MM-DD.md`
-- **注意**: 不是独立 cron；schema 中的 `phases.rem.cron` 当前未实际调度
-
-### 配置现实
-- `openclaw.json` 当前只显式配置了 `dreaming.enabled / frequency / verboseLogging`
-- `storage / execution / phases.*` 主要依赖 schema 默认值与解析能力
-- 若要把 `phases.light/deep/rem.cron` 变成真实调度，需要后续在插件中补注册逻辑
+也就是 **true three-phase**。
 
 ---
 
-## 📝 Daily Digest（触发式）
+## 2. 三条 managed cron
 
-### 触发条件
-- Gateway 启动时（`gateway_start` event）
-- 条件: `config.dreaming?.enabled === true`
+| Phase | Cron Name | Default Schedule | Purpose |
+|------|-----------|------------------|---------|
+| Light | `Memory Dreaming Light` | `0 */6 * * *` | 整理近期短期材料 |
+| Deep | `Memory Dreaming Promotion` | `0 3 * * *` | 评估并推动 durable promotion |
+| REM | `Memory Dreaming REM` | `0 5 * * 0` | 提炼模式与反思 |
 
-### 输入
+---
+
+## 3. 特别说明：Deep phase 的兼容身份
+
+Deep phase 当前仍复用官方 memory-core promotion identity。
+
+这样做的目的：
+
+- 让 Control UI 继续识别主晋升任务
+- 让 `doctor.memory.status.dreaming` 的聚合口径保持兼容
+
+所以不要把这理解为“memory-core 接管了整个 Dreaming”。
+它只是 **Deep phase 沿用了官方身份**，而 Light / REM 仍由插件自己管理。
+
+---
+
+## 4. 推荐配置方法
+
+```json5
+{
+  "plugins": {
+    "entries": {
+      "memory-lancedb-pro": {
+        "enabled": true,
+        "config": {
+          "dreaming": {
+            "enabled": true,
+            "frequency": "0 3 * * *",
+            "timezone": "Asia/Shanghai",
+            "verboseLogging": false,
+            "phases": {
+              "light": {
+                "enabled": true,
+                "cron": "0 */6 * * *"
+              },
+              "deep": {
+                "enabled": true,
+                "cron": "0 3 * * *",
+                "minScore": 0.8,
+                "minRecallCount": 3,
+                "minUniqueQueries": 3
+              },
+              "rem": {
+                "enabled": true,
+                "cron": "0 5 * * 0"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+说明：
+
+- `frequency` 现在主要作为 Deep 的默认 fallback
+- 若显式设置 `phases.deep.cron`，则以 phase 配置优先
+- Light / REM 推荐显式写出各自 cron
+
+---
+
+## 5. 输出文件
+
+Dreaming 常见输出：
+
 - `memory/dreaming/light/YYYY-MM-DD.md`
-- `memory/dreaming/rem/YYYY-MM-DD.md`
 - `memory/dreaming/deep/YYYY-MM-DD.md`
-
-### 输出
-- `memory/YYYY-MM/YYYY-MM-DD-complete.md`：完整记录，从 light phase 会话整理生成
-- `memory/YYYY-MM/YYYY-MM-DD-highlights.md`：重点摘要，从 light/rem/deep 三类 phase 提炼生成
-
-### 职责边界（v5.0 起）
-- **Daily Digest 负责**：从 dreaming phase 自动生成 complete/highlights
-- **每日健康检查负责**：验证 dreaming 链路是否正常、检查索引完整性、巡检 bridge 层
-- **不再重复生成**：健康检查任务不再手动生成 complete/highlights，避免与 digest 冲突
+- `memory/dreaming/rem/YYYY-MM-DD.md`
+- `memory/YYYY-MM/YYYY-MM-DD-complete.md`
+- `memory/YYYY-MM/YYYY-MM-DD-highlights.md`
 
 ---
 
-## 🔧 插件级 vs 宿主级任务
+## 6. 推荐验证步骤
 
-### 插件级任务（memory-lancedb-pro）
-- **Dreaming Phases**: Light / Deep / REM（事件驱动）
-- **Daily Digest**: phase → complete/highlights（gateway_start 触发）
-- **配置位置**: `openclaw.json` → `plugins.entries.memory-lancedb-pro.config.dreaming`
+```bash
+openclaw doctor --non-interactive
+openclaw gateway restart
+openclaw doctor --non-interactive
+```
 
-### 宿主级任务
-- **每日健康检查**: 验证 dreaming 链路 + 索引完整性 + bridge 巡检
-- **每周归档**: 周归档、候选层巡检
-- **每月维护**: LanceDB 去重、系统漂移检查
+然后确认：
 
----
-
-## 📝 文档说明
-
-> **重要**: 本文档仅为任务配置清单，不是声明式配置源。实际任务调度由以下配置控制：
-> - `openclaw.json` 中的 `plugins.entries.memory-lancedb-pro.config.dreaming`
-> - OpenClaw 宿主的 cron 配置
-> - `openclaw cron` 命令管理的定时任务
+- Dreaming 已启用
+- cron 列表里有三条任务
+- Control UI 状态正常
 
 ---
 
-## 🔄 变更历史
+## 7. 需要避免的旧口径
 
-| 版本 | 日期 | 变更内容 |
-|------|------|----------|
-| 5.0.0 | 2026-04-20 | 每日健康检查任务职责调整：归档整理移交 dreaming daily digest，新增 dreaming 链路验证 |
-| 4.1.0 | 2026-04-19 | 修正 Dreaming 为事件驱动 + memory-core promotion 混合链路，标明当前真实 cron 拓扑 |
-| 4.0.0 | 2026-04-19 | 新增 Dreaming Phases、Daily Digest、区分插件级/宿主级任务 |
-| 3.0.0 | 2026-03-23 | 初始版本，四大任务 |
+以下说法已经过时：
+
+- “只有一个 `Memory LanceDB Dreaming Promotion` 任务”
+- “Light / REM 只是 schema 能力，不会独立调度”
+- “当前实现本质还是 single sweep”
+
+这些都不再代表 `v1.3.2` 的最新状态。

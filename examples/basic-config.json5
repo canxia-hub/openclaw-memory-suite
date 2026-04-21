@@ -1,0 +1,21 @@
+{
+  plugins: {
+    entries: {
+      "memory-lancedb-pro": {
+        enabled: true,
+        config: {
+          embedding: {
+            provider: "openai-compatible",
+            model: "text-embedding-3-small",
+            apiKey: "${OPENAI_API_KEY}",
+            baseURL: "https://api.openai.com/v1"
+          },
+          dreaming: {
+            enabled: true,
+            timezone: "Asia/Shanghai"
+          }
+        }
+      }
+    }
+  }
+}

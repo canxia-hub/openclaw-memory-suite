@@ -1,203 +1,126 @@
 # OpenClaw Memory Suite
 
-> **Version**: 1.0.0  
+> **Version**: 1.1.0  
 > **Status**: Production Ready  
 > **License**: MIT  
 > **Repository**: https://github.com/canxia-hub/openclaw-memory-suite
 
----
-
-## 📖 Overview
-
-OpenClaw Memory Suite 是一套完整的 AI Agent 长期记忆解决方案，包含：
-
-- **memory-lancedb-pro** — LanceDB 增强型记忆插件
-- **lancedb-pro-skill** — 记忆系统维护技能
-- **graphify-openclaw** — Wiki 知识图谱技能
-- **self-improvement** — 自我改进与学习系统
-- **定时任务标准** — 记忆系统定时任务配置规范
+OpenClaw Memory Suite 是面向 OpenClaw 的记忆系统分发与文档仓库，负责把 **最新版 `memory-lancedb-pro` 插件**、相关技能、Wiki bridge 协作方式，以及 **Dreaming 配置方法** 整理成可复用安装路径。
 
 ---
 
-## 🏗️ Architecture
+## 当前推荐版本
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    OpenClaw Memory Suite                 │
-├─────────────────────────────────────────────────────────┤
-│  ┌─────────────────────────────────────────────────┐    │
-│  │           memory-lancedb-pro (Plugin)           │    │
-│  │  ┌──────────────────────────────────────────┐   │    │
-│  │  │  LanceDB Store + Hybrid Retrieval        │   │    │
-│  │  │  + Dreaming Phases + Daily Digest        │   │    │
-│  │  └──────────────────────────────────────────┘   │    │
-│  └─────────────────────────────────────────────────┘    │
-│                          ↓                               │
-│  ┌─────────────────────────────────────────────────┐    │
-│  │         graphify-openclaw (Wiki Skill)          │    │
-│  │  ┌──────────────────────────────────────────┐   │    │
-│  │  │  Bridge Mode + Knowledge Graph           │   │    │
-│  │  │  + Wiki Lint + Semantic Search           │   │    │
-│  │  └──────────────────────────────────────────┘   │    │
-│  └─────────────────────────────────────────────────┘    │
-│                          ↓                               │
-│  ┌─────────────────────────────────────────────────┐    │
-│  │        self-improvement (Learning Skill)        │    │
-│  │  ┌──────────────────────────────────────────┐   │    │
-│  │  │  Experience Capture + Skill Extraction   │   │    │
-│  │  │  + Error Learning + Continuous Evolution │   │    │
-│  │  └──────────────────────────────────────────┘   │    │
-│  └─────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────┘
-```
+| Component | Recommended Version | Notes |
+|-----------|---------------------|-------|
+| `memory-lancedb-pro` | `v1.3.2` | true three-phase Dreaming |
+| `openclaw-memory-suite` | `v1.1.0` | docs + install path aligned to v1.3.2 |
 
 ---
 
-## 📦 Components
+## 包含内容
 
-### 1. memory-lancedb-pro (Plugin)
-
-**Repository**: https://github.com/canxia-hub/memory-lancedb-pro
-
-**Core Features**:
-- LanceDB 向量存储 + BM25 全文索引
-- 混合检索（Vector + BM25 + Rerank）
-- Dreaming 三阶段机制（Light/REM/Deep）
-- Daily Digest 自动生成
-- Memory-Wiki Bridge 实时同步
-- 多作用域隔离（Agent/Project/User）
-
-**Version**: v1.3.1
+- `components/lancedb-pro-skill` — 记忆系统维护技能
+- `components/graphify-openclaw` — Wiki 知识图谱技能
+- `components/self-improvement` — 自我改进技能
+- `docs/CRON-JOBS.md` — Dreaming 与宿主级任务口径
+- `docs/INSTALLATION-GUIDE.md` — 完整安装与升级指南
+- `examples/` — 推荐配置示例
 
 ---
 
-### 2. lancedb-pro-skill (Skill)
+## 这次更新了什么
 
-**Purpose**: 记忆系统部署与维护技能
+### 1. 对齐最新版插件
 
-**Features**:
-- 快速部署指南
-- 配置模板（OpenAI/DashScope/Ollama/Jina）
-- 健康检查流程
-- 故障排查手册
-- 最佳实践
+仓库文档已统一到 `memory-lancedb-pro v1.3.2`：
 
----
+- true three-phase Dreaming
+- Light / Deep / REM 三条独立 managed cron
+- Deep phase 保持 memory-core promotion identity
+- 不再使用旧的单一 Dreaming promotion 口径
 
-### 3. graphify-openclaw (Wiki Skill)
+### 2. 更新 Dreaming 配置方法
 
-**Purpose**: Wiki 知识图谱构建与维护
+当前推荐配置方式不是“只开一个 daily frequency 就结束”，而是：
 
-**Features**:
-- Bridge 模式（LanceDB artifacts 实时同步）
-- 知识图谱构建
-- Wiki Lint（链接验证、噪音过滤）
-- 语义搜索
-- Obsidian CLI 集成
+- 开启 `dreaming.enabled`
+- 明确 `timezone`
+- 按需配置 `phases.light / phases.deep / phases.rem`
+- 用 `openclaw doctor --non-interactive` 先验证，再重启 gateway
 
----
+### 3. 保留最小配置与完整配置两条路径
 
-### 4. self-improvement (Skill)
-
-**Purpose**: Agent 自我改进与持续学习
-
-**Features**:
-- 经验捕获（LEARNINGS.md）
-- 错误记录（ERRORS.md）
-- 技能提取（从经验到技能）
-- 定时整理与聚类
-- 规则演进建议
+- `examples/basic-config.json5`
+- `examples/full-config.json5`
 
 ---
 
-### 5. 定时任务标准
-
-**Document**: `docs/CRON-JOBS.md`
-
-**Purpose**: 记忆系统定时任务配置规范
-
-**Tasks**:
-- Dreaming Phases（Light/REM/Deep）
-- Daily Digest（complete/highlights 生成）
-- 健康检查（索引完整性、bridge 状态）
-- 归档整理（周归档、月维护）
-- Self-improvement（自我成长、自我进化）
-
----
-
-## 🚀 Quick Start
-
-### For Humans
-
-See [README_AGENT.md](./README_AGENT.md) for Agent installation guide.
-
-### Basic Usage
+## 快速安装
 
 **📖 详细安装指南**: 请查阅 [INSTALLATION-GUIDE.md](./docs/INSTALLATION-GUIDE.md) 获取完整的安装步骤、配置规范和故障排查指南。
 
+### 1. 安装插件
+
 ```bash
-# 1. Install the suite
-git clone https://github.com/canxia-hub/openclaw-memory-suite.git
-cd openclaw-memory-suite
+cd ~/.openclaw/extensions
+git clone https://github.com/canxia-hub/memory-lancedb-pro.git
+cd memory-lancedb-pro
+git checkout v1.3.2
+npm install
+```
 
-# 2. Install components
-./scripts/install.sh
+### 2. 安装本套件
 
-# 3. Configure OpenClaw
-# Add to openclaw.json:
-# {
-#   "plugins": {
-#     "entries": {
-#       "memory-lancedb-pro": { "enabled": true }
-#     }
-#   }
-# }
+```bash
+cd ~/.openclaw/skills
+git clone https://github.com/canxia-hub/openclaw-memory-suite.git memory-suite
+cd memory-suite
+git checkout v1.1.0
+```
 
-# 4. Restart OpenClaw
+### 3. 复制技能
+
+将以下目录复制到你的 skills 目录中：
+
+- `components/lancedb-pro-skill` → `lancedb-pro`
+- `components/graphify-openclaw` → `graphify-openclaw`
+- `components/self-improvement` → `self-improving-agent`
+
+### 4. 选择配置模板
+
+- 最小配置：`examples/basic-config.json5`
+- 完整配置：`examples/full-config.json5`
+
+### 5. 验证并重启
+
+```bash
+openclaw doctor --non-interactive
 openclaw gateway restart
+openclaw doctor --non-interactive
 ```
 
 ---
 
-## 📚 Documentation
+## 文档入口
 
-- [README_AGENT.md](./README_AGENT.md) — Agent 安装指南
-- [ANNOUNCEMENT.md](./ANNOUNCEMENT.md) — 项目公告
-- [docs/CRON-JOBS.md](./docs/CRON-JOBS.md) — 定时任务配置
-- [docs/architecture.md](./docs/architecture.md) — 架构文档
-
----
-
-## 🔗 Related Repositories
-
-| Repository | Description |
-|------------|-------------|
-| [memory-lancedb-pro](https://github.com/canxia-hub/memory-lancedb-pro) | LanceDB 记忆插件 |
-| [openclaw](https://github.com/openclaw/openclaw) | OpenClaw 核心框架 |
+- [README_AGENT.md](./README_AGENT.md) — 面向 Agent 的安装与验证指南
+- [ANNOUNCEMENT.md](./ANNOUNCEMENT.md) — 当前版本公告
+- [docs/CRON-JOBS.md](./docs/CRON-JOBS.md) — Dreaming / cron 最新口径
+- [docs/INSTALLATION-GUIDE.md](./docs/INSTALLATION-GUIDE.md) — 完整安装指南
+- [examples/README.md](./examples/README.md) — 配置示例说明
 
 ---
 
-## 🤝 Contributing
+## 核心提醒
 
-We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md) for details.
-
----
-
-## 📄 License
-
-MIT License — see [LICENSE](./LICENSE) for details.
+1. **先装插件源码，再改配置**，不要反过来。
+2. **改完配置先 doctor，再 restart**。
+3. **不要再把旧的单一 Dreaming cron 说明当成当前实现**。
+4. Deep phase 当前兼容 Control UI 的关键点，是复用官方 promotion identity，而不是自造一套 UI 识别口径。
 
 ---
 
-## 👥 Authors
+## License
 
-- **win4r** — Original memory-lancedb-pro author
-- **canxia-hub** — Maintenance and enhancements
-
----
-
-## 🙏 Acknowledgments
-
-- OpenClaw Team
-- LanceDB Team
-- All contributors and users
+MIT

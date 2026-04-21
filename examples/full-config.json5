@@ -1,0 +1,69 @@
+{
+  plugins: {
+    entries: {
+      "memory-lancedb-pro": {
+        enabled: true,
+        config: {
+          embedding: {
+            provider: "openai-compatible",
+            model: "text-embedding-3-small",
+            apiKey: "${OPENAI_API_KEY}",
+            baseURL: "https://api.openai.com/v1"
+          },
+          dbPath: "~/.openclaw/memory/lancedb-pro",
+          enableManagementTools: true,
+          autoCapture: true,
+          autoRecall: false,
+          dreaming: {
+            enabled: true,
+            frequency: "0 3 * * *",
+            timezone: "Asia/Shanghai",
+            verboseLogging: false,
+            storage: {
+              mode: "inline",
+              separateReports: false
+            },
+            execution: {
+              speed: "balanced",
+              thinking: "medium",
+              budget: "medium"
+            },
+            phases: {
+              light: {
+                enabled: true,
+                cron: "0 */6 * * *",
+                lookbackDays: 2,
+                limit: 100
+              },
+              deep: {
+                enabled: true,
+                cron: "0 3 * * *",
+                limit: 10,
+                minScore: 0.8,
+                minRecallCount: 3,
+                minUniqueQueries: 3
+              },
+              rem: {
+                enabled: true,
+                cron: "0 5 * * 0",
+                lookbackDays: 7,
+                limit: 10,
+                minPatternStrength: 0.75
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  memoryWiki: {
+    enabled: true,
+    config: {
+      vaultMode: "bridge",
+      bridge: {
+        enabled: true,
+        readMemoryArtifacts: true
+      }
+    }
+  }
+}
