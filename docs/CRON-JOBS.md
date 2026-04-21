@@ -23,11 +23,13 @@
 
 ## 2. 三条 managed cron
 
-| Phase | Cron Name | Default Schedule | Purpose |
-|------|-----------|------------------|---------|
-| Light | `Memory Dreaming Light` | `0 */6 * * *` | 整理近期短期材料 |
-| Deep | `Memory Dreaming Promotion` | `0 3 * * *` | 评估并推动 durable promotion |
-| REM | `Memory Dreaming REM` | `0 5 * * 0` | 提炼模式与反思 |
+| Phase | Cron Name | Event Text | Default Schedule | Purpose |
+|------|-----------|------------|------------------|---------|
+| Light | `Memory Dreaming Light` | `__openclaw_memory_lancedb_pro_dreaming_light__` | `0 */6 * * *` | 整理近期短期材料 |
+| Deep | `Memory Dreaming Promotion` | `__openclaw_memory_core_short_term_promotion_dream__` | `0 3 * * *` | 评估并推动 durable promotion |
+| REM | `Memory Dreaming REM` | `__openclaw_memory_lancedb_pro_dreaming_rem__` | `0 5 * * 0` | 提炼模式与反思 |
+
+> **关键**: Deep phase 使用 `__openclaw_memory_core_short_term_promotion_dream__`（而非 `__openclaw_memory_lancedb_pro_dreaming_deep__`），这是为了兼容 Control UI 和 doctor.memory.status。
 
 ---
 
@@ -120,7 +122,50 @@ openclaw doctor --non-interactive
 
 ---
 
-## 7. 需要避免的旧口径
+## 7. 手动创建 Cron 任务
+
+如果插件自动注册失败，可手动创建三个 cron 任务：
+
+```json5
+// Light Phase - 每6小时
+{
+  "name": "Memory Dreaming Light",
+  "description": "[managed-by=memory-lancedb-pro.dreaming.light] Stage recent short-term material",
+  "enabled": true,
+  "schedule": { "kind": "cron", "expr": "0 */6 * * *", "tz": "Asia/Shanghai" },
+  "sessionTarget": "main",
+  "wakeMode": "now",
+  "payload": { "kind": "systemEvent", "text": "__openclaw_memory_lancedb_pro_dreaming_light__" }
+}
+
+// Deep Phase - 每天03:00
+{
+  "name": "Memory Dreaming Promotion",
+  "description": "[managed-by=memory-core.short-term-promotion] Promote weighted short-term recalls into durable memory",
+  "enabled": true,
+  "schedule": { "kind": "cron", "expr": "0 3 * * *", "tz": "Asia/Shanghai" },
+  "sessionTarget": "main",
+  "wakeMode": "now",
+  "payload": { "kind": "systemEvent", "text": "__openclaw_memory_core_short_term_promotion_dream__" }
+}
+
+// REM Phase - 每周日05:00
+{
+  "name": "Memory Dreaming REM",
+  "description": "[managed-by=memory-lancedb-pro.dreaming.rem] Reflect on recurring patterns",
+  "enabled": true,
+  "schedule": { "kind": "cron", "expr": "0 5 * * 0", "tz": "Asia/Shanghai" },
+  "sessionTarget": "main",
+  "wakeMode": "now",
+  "payload": { "kind": "systemEvent", "text": "__openclaw_memory_lancedb_pro_dreaming_rem__" }
+}
+```
+
+> **重要**: 使用错误的事件名会导致任务被跳过。创建后用 `openclaw doctor --non-interactive` 验证插件已注册对应事件处理器。
+
+---
+
+## 8. 需要避免的旧口径
 
 以下说法已经过时：
 
